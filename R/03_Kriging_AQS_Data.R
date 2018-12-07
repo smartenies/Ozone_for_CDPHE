@@ -57,7 +57,7 @@ plot(st_geometry(pts_aea), col="blue", add=T)
 
 #' Add a 5 km buffer around the bounding box
 bound_5km <- st_buffer(pts_bound, dist=5000)
-plot(st_geometry(bound_1km), main="extended bounding box")
+plot(st_geometry(bound_5km), main="extended bounding box")
 plot(st_geometry(pts_bound), col=NA, border="red", add=T)
 plot(st_geometry(pts_aea), col="blue", add=T)
 
@@ -119,7 +119,7 @@ for (i in 11:length(krige_files)) {
                                  "_Diagnostics.csv")
   
   
-  daily <- read_csv(paste0(aqs_data_path, krige_files[i]))
+  daily <- read_csv(here::here("Data/AQS_Data", krige_files[i]))
   colnames(daily) <- gsub(" ", ".", colnames(daily))
   daily <- daily %>%  
     filter(State.Code == state) %>% 
@@ -287,7 +287,7 @@ for (i in 11:length(krige_files)) {
     }
     
     #' Summary data frame
-    temp <- data.frame(WRFGRID_ID = krige_pts_sp@data$WRFGRID_ID,
+    temp <- data.frame(GEOID = krige_pts_sp@data$GEOID,
                        pollutant = str_replace(krige_files[i], ".csv", ""),
                        date = dates[j],
                        conc_pred_idw_pwr2 = idw_pwr2$var1.pred,
