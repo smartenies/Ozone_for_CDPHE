@@ -5,6 +5,8 @@
 #' 
 #' Description: This script calculates daily means at each monitor
 #' Also includes code to calculate MDA8 for ozone data
+#' 
+#' Only need to run this script if you've gathered hourly data from the AQS site
 #' -----------------------------------------------------------------------------
 
 library(sf)
@@ -18,7 +20,7 @@ ll_wgs84 <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 #' -----------------------------------------------------------------------------
 
 #' For which years and which state do we want data?
-years <- c(2010:2010)
+years <- c(2011:2017)
 state <- "08" #Colorado
 time_zone <- "America/Denver"
 
@@ -38,9 +40,8 @@ aqs_summ_name <- paste0("AQS_Daily_Mean_Summary_", state, "_",
 aqs_o3_summ_name <- paste0("AQS_Ozone_MDA8_Summary_", state, "_", 
                             years[1], "_to_", years[length(years)], ".csv")
 
-
 #' Read in the daily/hourly data
-mon_data <- read_csv(here::here("Data", aqs_file_name)) %>% 
+mon_data <- read_csv(here::here("Data/AQS_Data", aqs_file_name)) %>% 
   #' if ozone, convert to ppb
   mutate(Sample.Measurement = ifelse(Parameter.Code == 44201, 
                                      Sample.Measurement * 1000,

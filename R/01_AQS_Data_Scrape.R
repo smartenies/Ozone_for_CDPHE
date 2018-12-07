@@ -24,7 +24,7 @@ if(!dir.exists("./Data/Temp")) dir.create("./Data/Temp")
 if(!dir.exists("./Data/AQS_Data")) dir.create("./Data/AQS_Data")
 if(!dir.exists("./Data/Met_Data")) dir.create("./Data/Met_Data")
 
-years <- c(2010:2014)
+years <- c(2011:2017)
 met_vars <- c("WIND", "PRESS", "TEMP", "RH_DP")
 
 for (i in 1:length(years)) {
@@ -61,7 +61,12 @@ for (i in 1:length(years)) {
   unzip(here::here("Data/Temp", "temp.zip"), exdir = here::here("Data/AQS_Data"))
 }
 
-#' 
+
+
+
+
+
+
 #' #' ----------------------------------------------------------------------------
 #' #' This script is based on a previous script for scraping AQS data
 #' #' AUTHOR: Chad W. Milando (Univ of Michigan; cmilando@umich.edu)

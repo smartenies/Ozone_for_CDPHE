@@ -23,7 +23,7 @@ albers <- "+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 
 #' -----------------------------------------------------------------------------
 
 #' For which years and which state do we want data?
-years <- c(2010:2014)
+years <- c(2011:2017)
 state <- "08" #Colorado
 time_zone <- "America/Denver"
 
@@ -34,20 +34,51 @@ time_zone <- "America/Denver"
 
 #' Points for krigings
 #' gstat requires sp objects, not sf objects
-pts_name <- "gridded_aircraft_ozone.csv" 
 
-# krige_pts <- st_read(here::here("Data", pts_name),
-#                      stringsAsFactors = F, wkt = "WKT",
-#                      crs = albers) %>% 
-#   st_centroid() %>% 
-#   select(-WKT) %>% 
-#   mutate_if(is.character, as.numeric)
+#' First, create a boundary based on the 470 loop
+#' Coordinates based on Google Maps
+pts_df <- data.frame(lon=c(-105.194150, -105.086157, -104.785862,
+                           -104.715897, -105.007800),
+                     lat=c(39.712174, 39.553840, 39.548127,
+                           39.740367, 39.984862))
+pts <-  st_as_sf(pts_df, coords=c("lon", "lat"), crs=ll_wgs84)
+plot(st_geometry(pts), main="Boundary Points: latlong")
 
-krige_pts <- read_csv(here::here("Data", pts_name)) %>% 
-  st_as_sf(coords = c("lon", "lat"), crs = ll_wgs84) %>% 
+#' Project to Albers equal area (used by the Land Use dataset)
+#' Want to preserve area so we can calculate area-based metrics such as 
+#' population density
+pts_aea <- st_transform(pts, crs=albers)
+plot(st_geometry(pts_aea), main="Boundary Points: Albers Equal Area")
+
+#' Get boundary around these points
+pts_bound <- st_make_grid(pts_aea, n = 1)
+plot(st_geometry(pts_bound), main="bounding box", border="red", col=NA)
+plot(st_geometry(pts_aea), col="blue", add=T)
+
+#' Add a 5 km buffer around the bounding box
+bound_5km <- st_buffer(pts_bound, dist=5000)
+plot(st_geometry(bound_1km), main="extended bounding box")
+plot(st_geometry(pts_bound), col=NA, border="red", add=T)
+plot(st_geometry(pts_aea), col="blue", add=T)
+
+#' Next, select census tracts that have centroids completely within this boundary
+co_tracts <- st_read(here::here("Data", "tl_2017_08_tract.shp")) %>% 
   st_transform(albers) %>% 
-  select(WRFGRID_ID) %>% 
-  st_centroid() %>% 
+  mutate(GEOID = as.character(GEOID))
+plot(st_geometry(co_tracts))
+
+co_centroids <- st_centroid(co_tracts) 
+
+denver_centroids <- co_centroids[st_within(co_centroids, bound_5km) %>% lengths > 0,]
+
+denver_tracts <- filter(co_tracts, GEOID %in% denver_centroids$GEOID)
+
+plot(st_geometry(denver_tracts))
+plot(st_geometry(denver_centroids), col="blue", add=T)
+plot(st_geometry(bound_5km), add=T, border="red")
+
+#' Lastly, identify the centroids of the census tracts for kriging
+krige_pts <- denver_centroids %>% 
   mutate_if(is.character, as.numeric) 
 
 #' #' just use 5% of points for testing out the script
@@ -60,26 +91,17 @@ plot(st_geometry(krige_pts), pch = ".")
 krige_pts_sp <- as(krige_pts, "Spatial")
 plot(krige_pts_sp)
 
-
 #' -----------------------------------------------------------------------------
 #' Set up objects for kriging
 #' #' Note: gstat (for kriging) requires sp objects (not sf)
 #' -----------------------------------------------------------------------------
 
 #' List of files to krige
-aqs_data_path <- "C:/Users/semarten/OneDrive for Business/Research/ECHO_Aim1_LUR/Data/AQS_Data/"
-krige_files <- data.frame(krige_files = list.files(path = aqs_data_path)) %>% 
-  mutate(krige_files = as.character(krige_files)) %>% 
-  filter(str_detect(krige_files, 
+krige_files <- data.frame(krige_files = list.files(path = here::here("Data/AQS_Data"))) %>%
+  mutate(krige_files = as.character(krige_files)) %>%
+  filter(str_detect(krige_files,
                     paste(as.character(years),collapse = '|')))
 krige_files <- krige_files$krige_files
-
-# krige_files <- data.frame(krige_files = list.files(path = here::here("Data/AQS_Data"))) %>% 
-#   mutate(krige_files = as.character(krige_files)) %>% 
-#   filter(str_detect(krige_files, 
-#                     paste(as.character(years),collapse = '|')))
-# krige_files <- krige_files$krige_files
-
 
 # for (i in 1:length(krige_files)) {
 for (i in 11:length(krige_files)) {
@@ -184,7 +206,7 @@ for (i in 11:length(krige_files)) {
     } else {
       data_norm_test <- NA
     }
-      
+    
     #' Some IDW estimates for comparison
     idw_pwr2 <- idw(mean ~ 1, monitors, krige_pts_sp, idp = 2)
     idw_pwr2.5 <- idw(mean ~ 1, monitors, krige_pts_sp, idp = 2.5)
@@ -235,7 +257,7 @@ for (i in 11:length(krige_files)) {
     error_check <- !inherits(fit_error, "error")
     
     if(range_check == T & range_val_check == T & error_check == T) {
-    
+      
       vgm_fit <- fit.variogram(vgm, model=vgm(all_models),
                                fit.kappa = seq(.3,5,.01), fit.method = fit_method)
       
@@ -254,8 +276,8 @@ for (i in 11:length(krige_files)) {
       #' the mean is not known (page 185)
       if(all(!is.na(data_norm_test))) {
         if(data_norm_test$p.value < 0.05) {
-         ok_result$var1.pred <- exp(ok_result$var1.pred + (0.5*ok_result$var1.var))
-         ok_result$var1.var <- NA
+          ok_result$var1.pred <- exp(ok_result$var1.pred + (0.5*ok_result$var1.var))
+          ok_result$var1.var <- NA
         }
       }
     } else {
@@ -350,16 +372,12 @@ for (i in 11:length(krige_files)) {
       cv_diagnostics <- bind_rows(cv_diagnostics, temp2)
       rm(temp2)
     }
-        
+    
     rm(daily2, monitors, model, ok_result, temp)
   }
   #' Write out results
-  for_wande <- "C:/Users/semarten/OneDrive for Business/Research/For Wande/"
-  write_csv(krige_data, paste0(for_wande, aqs_krige_name))
-  write_csv(cv_data, paste0(for_wande, aqs_cv_name))
-  write_csv(cv_diagnostics, paste0(for_wande, aqs_diagnostics_name))
   
-  # write_csv(krige_data, here::here("Data", aqs_krige_name))
-  # write_csv(cv_data, here::here("Data", aqs_cv_name))
-  # write_csv(cv_diagnostics, here::here("Data", aqs_diagnostics_name))
+  write_csv(krige_data, here::here("Data", aqs_krige_name))
+  write_csv(cv_data, here::here("Data", aqs_cv_name))
+  write_csv(cv_diagnostics, here::here("Data", aqs_diagnostics_name))
 }
