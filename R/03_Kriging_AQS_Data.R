@@ -395,7 +395,7 @@ for (i in 1:length(krige_files)) {
   }
   #' Write out results
   
-  write_csv(krige_data, here::here("Data", aqs_krige_name))
-  write_csv(cv_data, here::here("Data", aqs_cv_name))
-  write_csv(cv_diagnostics, here::here("Data", aqs_diagnostics_name))
+  write_csv(krige_data, here::here("Results", aqs_krige_name))
+  write_csv(cv_data, here::here("Results", aqs_cv_name))
+  write_csv(cv_diagnostics, here::here("Results", aqs_diagnostics_name))
 }
