@@ -132,7 +132,8 @@ $(document).ready(function () {
 <p><strong>Contact:</strong> <a href="mailto:Sheena.Martenies@colostate.edu">Sheena.Martenies@colostate.edu</a></p>
 <div id="analytical-notes" class="section level4">
 <h4>Analytical Notes</h4>
-<p>02_Summarizing_AQS_Data.R only needs to be ran if the hourly data are collected from the AQS API</p>
+<p>02_Summarizing_AQS_Data.R only needs to be used if the hourly data are collected from the AQS API</p>
+<p>04_Plotting_AQS_Data.R is under construction</p>
 </div>
 <div id="notes-for-keving-berg-cdphe-121018" class="section level4">
 <h4>Notes for Keving Berg, CDPHE (12/10/18)</h4>
@@ -154,13 +155,17 @@ $(document).ready(function () {
 <li><p>An alternative approach may be to average these concentrations over weeks or months to get better estimates of concentrations, but that will likely depend on your analysis. It’s better to average at the monitors and re-krige. If this is something you want, let me know!</p></li>
 </ul>
 </div>
-<div id="notes-on-the-kriging-analysis" class="section level3">
-<h3>Notes on the kriging analysis:</h3>
+<div id="notes-on-the-kriging-analysis" class="section level4">
+<h4>Notes on the kriging analysis:</h4>
 <ul>
-<li><p>See Li and Heap for a nice explanation of kriging diagnostics <a href="https://pdfs.semanticscholar.org/686c/29a81eab59d7f6b7e2c4b060b1184323a122.pdf" class="uri">https://pdfs.semanticscholar.org/686c/29a81eab59d7f6b7e2c4b060b1184323a122.pdf</a></p></li>
-<li><p>If the monitoring data weren’t normal, the code attempts to use log-transformed estimates. We need to apply a correction to get estimates back in the original scale (See Oliver and Webster 2007, PAGE 185) <a href="https://books.google.com/books?hl=en&amp;lr" class="uri">https://books.google.com/books?hl=en&amp;lr</a>=&amp;id=WBwSyvIvNY8C&amp;oi=fnd&amp;pg=PR5&amp;ots=CCLmSNqK1c&amp;sig=lFZanxv2eVSKec6nPdESzuIFrA4#v=onepage&amp;q&amp;f=false</p>
+<li><p>See Li and Heap for a nice explanation of kriging diagnostics</p>
 <ul>
-<li>Note: A back-transformed variance estimate for OK cannot be calculated because the mean is not known (Oliver and Webster 2007, page 185)</li>
+<li><a href="https://pdfs.semanticscholar.org/686c/29a81eab59d7f6b7e2c4b060b1184323a122.pdf" class="uri">https://pdfs.semanticscholar.org/686c/29a81eab59d7f6b7e2c4b060b1184323a122.pdf</a></li>
+</ul></li>
+<li><p>If the monitoring data weren’t normal, the code attempts to use log-transformed estimates. We need to apply a correction to get estimates back in the original scale (See Oliver and Webster 2007, PAGE 185)</p>
+<ul>
+<li><p><a href="https://books.google.com/books?hl=en&amp;lr" class="uri">https://books.google.com/books?hl=en&amp;lr</a>=&amp;id=WBwSyvIvNY8C&amp;oi=fnd&amp;pg=PR5&amp;ots=CCLmSNqK1c&amp;sig=lFZanxv2eVSKec6nPdESzuIFrA4#v=onepage&amp;q&amp;f=false</p></li>
+<li><p>Note: A back-transformed variance estimate for OK cannot be calculated because the mean is not known (Oliver and Webster 2007, page 185)</p></li>
 </ul></li>
 </ul>
 </div>
