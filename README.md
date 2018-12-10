@@ -10,9 +10,10 @@ Kriged daily and monthly estimates of ozone exposures at census tracts in the De
 
 #### Analytical Notes
 
-02_Summarizing_AQS_Data.R only needs to be ran if the hourly data are collected 
+02_Summarizing_AQS_Data.R only needs to be used if the hourly data are collected 
 from the AQS API
 
+04_Plotting_AQS_Data.R is under construction 
 
 
 #### Notes for Keving Berg, CDPHE (12/10/18)
