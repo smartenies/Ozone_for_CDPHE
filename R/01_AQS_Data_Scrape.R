@@ -62,8 +62,26 @@ for (i in 1:length(years)) {
 }
 
 
+#' ----------------------------------------------------------------------------
+#' Caluclate monthly mean MDA8 
+#' ----------------------------------------------------------------------------
 
+library(lubridate)
 
+ozone_MDA8_files <- list.files(here::here("Data/AQS_Data"),
+                               pattern = "8hour_44201")
+
+for (i in 1:length(ozone_MDA8_files)) {
+  temp <- read_csv(here::here("Data/AQS_Data", ozone_MDA8_files[i]))
+
+  colnames(temp) <- gsub(" ", "_", colnames(temp))
+
+  temp <- temp %>%
+    mutate(month = month(Date_Local))
+  
+  temp_name <- gsub("8hour_", "8hour_monthly_", ozone_MDA8_files[i])
+  write_csv(temp, here::here("Data/AQS_Data", temp_name))
+}
 
 
 

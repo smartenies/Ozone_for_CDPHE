@@ -103,8 +103,7 @@ krige_files <- data.frame(krige_files = list.files(path = here::here("Data/AQS_D
                     paste(as.character(years),collapse = '|')))
 krige_files <- krige_files$krige_files
 
-# for (i in 1:length(krige_files)) {
-for (i in 11:length(krige_files)) {
+for (i in 1:length(krige_files)) {
   
   #' Output file names
   aqs_krige_name <- paste0(str_replace(krige_files[i], ".csv", ""), 
@@ -120,25 +119,25 @@ for (i in 11:length(krige_files)) {
   
   
   daily <- read_csv(here::here("Data/AQS_Data", krige_files[i]))
-  colnames(daily) <- gsub(" ", ".", colnames(daily))
+  colnames(daily) <- gsub(" ", "_", colnames(daily))
   daily <- daily %>%  
-    filter(State.Code == state) %>% 
-    mutate(County.Code = str_pad(County.Code, 3, pad = "0"),
-           Site.Num = str_pad(Site.Num, 4, pad = "0")) %>% 
-    mutate(monitor_id = paste0(County.Code, Site.Num)) %>% 
+    filter(State_Code == state) %>% 
+    mutate(County_Code = str_pad(County_Code, 3, pad = "0"),
+           Site_Num = str_pad(Site_Num, 4, pad = "0")) %>% 
+    mutate(monitor_id = paste0(County_Code, Site_Num)) %>% 
     
     #' using the mean with flagged data excluded for 9h ozone
     #' Arithmetic mean for all other measures
     rowwise() %>% 
-    mutate(mean = ifelse(str_detect(krige_files[i], "8hour_44201"), 
-                         Mean.Excluding.All.Flagged.Data, 
-                         Arithmetic.Mean)) %>% 
+    mutate(mean = ifelse(str_detect(krige_files[i], "8hour_"), 
+                         Mean_Excluding_All_Flagged_Data, 
+                         Arithmetic_Mean)) %>% 
     
     #' convert ppm to ppb
-    mutate(mean = ifelse(Units.of.Measure == "Parts per million", 
+    mutate(mean = ifelse(Units_of_Measure == "Parts per million", 
                          mean * 1000, mean)) %>% 
-    mutate(Units.of.Measure = ifelse(Units.of.Measure == "Parts per million", 
-                                     "ppb", Units.of.Measure)) %>%
+    mutate(Units_of_Measure = ifelse(Units_of_Measure == "Parts per million", 
+                                     "ppb", Units_of_Measure)) %>%
     
     #' Just get the first measurement, not the co-located one
     filter(POC == 1)
@@ -155,12 +154,26 @@ for (i in 11:length(krige_files)) {
   
   #' if using 8h ozone data, need to select daily 8h max
   if(str_detect(krige_files[i], "8hour_44201")) {
-    ozone <- select(daily, monitor_id, Date.Local, mean) %>% 
+    ozone <- select(daily, monitor_id, Date_Local, mean) %>% 
       group_by(monitor_id, Date.Local) %>% 
       summarize(mean = max(mean))
     
-    daily <- select(daily, monitor_id, Date.Local, Units.of.Measure) %>%
-      left_join(ozone, by=c("monitor_id", "Date.Local")) %>% 
+    daily <- select(daily, monitor_id, Date_Local, Units_of_Measure) %>%
+      left_join(ozone, by=c("monitor_id", "Date_Local")) %>% 
+      distinct()
+    
+    rm(ozone)
+  }
+  
+  #' if using monthly 8h ozone data, calculate monthly mean
+  if(str_detect(krige_files[i], "monthly")) {
+    ozone <- select(daily, monitor_id, month, mean) %>% 
+      group_by(monitor_id, month) %>% 
+      summarize(mean = mean(mean))
+    
+    daily <- select(daily, monitor_id, month, Units_of_Measure) %>%
+      left_join(ozone, by=c("monitor_id", "month")) %>% 
+      rename("Date_Local" = "month") %>% 
       distinct()
     
     rm(ozone)
@@ -179,7 +192,7 @@ for (i in 11:length(krige_files)) {
   c_dist = 50000
   
   #' list of dates, pollutants to loop through
-  dates <- unique(daily$Date.Local)
+  dates <- unique(daily$Date_Local)
   
   #' data frames to collect results
   krige_data <- data.frame()
@@ -187,7 +200,7 @@ for (i in 11:length(krige_files)) {
   cv_diagnostics <- data.frame()
   
   for (j in 1:length(dates)) {
-    daily2 <- filter(daily, Date.Local == dates[j])
+    daily2 <- filter(daily, Date_Local == dates[j])
     #if (nrow(daily2 == 0)) next
     
     monitors <- left_join(monitor_pts, daily2, by="monitor_id") %>% 
@@ -263,7 +276,12 @@ for (i in 11:length(krige_files)) {
       
       
       model <- as.character(vgm_fit$model)[nrow(vgm_fit)]
-      # plot(vgm, vgm_fit)
+      
+      jpeg(filename = paste0(here::here("Figures/Kriging"), "/",
+                             gsub(".csv", "", krige_files[i]),
+                             "_", dates[j], ".jpeg"))
+      plot(vgm, vgm_fit)
+      dev.off()
       
       #' Third, krige
       ok_result <- krige(mean ~ 1, monitors, krige_pts_sp, vgm_fit)
@@ -355,7 +373,7 @@ for (i in 11:length(krige_files)) {
     } else {
       temp2 <- data.frame(pollutant = str_replace(krige_files[i], ".csv", ""),
                           date = dates[j],
-                          log_transformed = ifelse(is.na(data_norm_test), F, 
+                          log_transformed = ifelse(all(is.na(data_norm_test)), F, 
                                                    data_norm_test$p.value < 0.05),
                           monitor_n = nrow(monitors),
                           monitor_mean = mean(monitors$mean, na.rm=T),
