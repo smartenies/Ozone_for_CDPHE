@@ -155,27 +155,30 @@ for (i in 1:length(krige_files)) {
   #' if using 8h ozone data, need to select daily 8h max
   if(str_detect(krige_files[i], "8hour_44201")) {
     ozone <- select(daily, monitor_id, Date_Local, mean) %>% 
-      group_by(monitor_id, Date.Local) %>% 
+      group_by(monitor_id, Date_Local) %>% 
       summarize(mean = max(mean))
     
-    daily <- select(daily, monitor_id, Date_Local, Units_of_Measure) %>%
+    daily <- select(daily, monitor_id, Date_Local, month, Units_of_Measure) %>%
       left_join(ozone, by=c("monitor_id", "Date_Local")) %>% 
       distinct()
     
     rm(ozone)
   }
   
-  #' if using monthly 8h ozone data, calculate monthly mean
+  #' if using monthly 8h ozone data, calculate monthly mean of the daily 8 h max
   if(str_detect(krige_files[i], "monthly")) {
-    ozone <- select(daily, monitor_id, month, mean) %>% 
+    ozone <- select(daily, monitor_id, Date_Local, month, mean) %>% 
+      group_by(monitor_id, Date_Local, month) %>% 
+      summarize(mean = max(mean)) %>% 
+      ungroup() %>% 
       group_by(monitor_id, month) %>% 
       summarize(mean = mean(mean))
-    
+
     daily <- select(daily, monitor_id, month, Units_of_Measure) %>%
       left_join(ozone, by=c("monitor_id", "month")) %>% 
-      rename("Date_Local" = "month") %>% 
-      distinct()
-    
+      distinct() %>% 
+      rename("Date_Local" = "month")
+
     rm(ozone)
   }
   
