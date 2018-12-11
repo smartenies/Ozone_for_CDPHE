@@ -25,6 +25,8 @@ from the AQS API
 - I've generated estimates for ozone at census tract centroids using both inverse-distance
 weighting (IDW) and ordinary kriging (OK) (03_Kriging_AQS_Data.R) 
 
+- The analysis uses 2-D ordinary kriging and does not account for the potential influence of time. I wanted to make sure you had some data to work with moving forward. If you're finding that the ordinary kriging results aren't working well, I can run a different model using spatiotemporal kriging. Let me know what might work best for your analysis. 
+
     - Sometimes it's a challenge to fit a semivariogram to the data, and therefore kriged estimates aren't always available.For these days, IDW predictions are still available
     - You'll have to take a look at the distribution of each daily estimate in order
 to see if you want to use the kriged data. IDW estimates may be better given some of
