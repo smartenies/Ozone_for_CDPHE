@@ -349,7 +349,7 @@ for (i in 1:length(krige_files)) {
         
         temp2 <- data.frame(pollutant = str_replace(krige_files[i], ".csv", ""),
                             date = dates[j],
-                            log_transformed = ifelse(is.na(data_norm_test), F, 
+                            log_transformed = ifelse(all(is.na(data_norm_test)), F, 
                                                      data_norm_test$p.value < 0.05),
                             monitor_n = nrow(monitors),
                             monitor_mean = mean(monitors$mean, na.rm=T),
