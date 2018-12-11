@@ -31,7 +31,7 @@ to see if you want to use the kriged data. IDW estimates may be better given som
 the limitations (time resolution, spatial coverage of monitors)
 
 - Due to storage issues on my U:/ drive, the output files are currently on my Google Drive:
-(https://drive.google.com/open?id=1-omBeF4YsEzJOFT12N9fvQXp2UqfnUIR)
+(https://drive.google.com/open?id=1Exb2mP28GVNICK1k_Pk52cZSal1Tr6K-)
     
     - "8hour_" is the daily 8hour max concentration (not necessarily contemporaneous)
     - "8hour_monthly" is the monthly mean of daily 8hour max concentrations (also not necessarily contemporaneous)
