@@ -349,7 +349,7 @@ for (i in 1:length(krige_files)) {
         
         temp2 <- data.frame(pollutant = str_replace(krige_files[i], ".csv", ""),
                             date = dates[j],
-                            log_transformed = ifelse(is.na(data_norm_test), F, 
+                            log_transformed = ifelse(all(is.na(data_norm_test)), F, 
                                                      data_norm_test$p.value < 0.05),
                             monitor_n = nrow(monitors),
                             monitor_mean = mean(monitors$mean, na.rm=T),
@@ -402,3 +402,15 @@ for (i in 1:length(krige_files)) {
   write_csv(cv_data, here::here("Results", aqs_cv_name))
   write_csv(cv_diagnostics, here::here("Results", aqs_diagnostics_name))
 }
+
+
+#' #' clean diagnostics files
+#' diag_files <- list.files(here::here("Results"), pattern = "Diagnostics")
+#' 
+#' for (diag in 1:length(diag.files)) {
+#'   temp <- read_csv(here::here("Results", diag_files[diag])) %>% 
+#'     distinct()
+#'   write_csv(temp,here::here("Results", diag_files[diag]))
+#' }
+
+
