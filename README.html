@@ -139,20 +139,27 @@ $(document).ready(function () {
 <h4>Notes for Keving Berg, CDPHE (12/10/18)</h4>
 <ul>
 <li><p>Monitoring data were collected from the US EPA AQS data mart (01_AQS_Data_Scrape.R)</p></li>
-<li><p>All estiamtes for ozone are in ppb</p></li>
+<li><p>All estimates for ozone have been converted to ppb</p></li>
 <li><p>I’ve generated estimates for ozone at census tract centroids using both inverse-distance weighting and ordinary kriging (03_Kriging_AQS_Data.R)</p>
 <ul>
-<li>Sometimes it’s a challenge to fit a semivarigram to the data, and kriged estimates aren’t available.</li>
-<li>You’ll have to take a look at the distribution of each daily estimate in order to see if you want to use the kriged data. IDW estiamtes may be better given some of the limitations (time resolution, spatial coverage of monitors)</li>
+<li>Sometimes it’s a challenge to fit a semivarigram to the data, and therefore kriged estimates aren’t always available.</li>
+<li>You’ll have to take a look at the distribution of each daily estimate in order to see if you want to use the kriged data. IDW estimates may be better given some of the limitations (time resolution, spatial coverage of monitors)</li>
 </ul></li>
-<li><p>Due to storage issues on my U:/ drive, the output files are currently [here] (<a href="https://drive.google.com/open?id=1-omBeF4YsEzJOFT12N9fvQXp2UqfnUIR" class="uri">https://drive.google.com/open?id=1-omBeF4YsEzJOFT12N9fvQXp2UqfnUIR</a>)</p>
+<li><p>Due to storage issues on my U:/ drive, the output files are currently on my Google Drive: (<a href="https://drive.google.com/open?id=1-omBeF4YsEzJOFT12N9fvQXp2UqfnUIR" class="uri">https://drive.google.com/open?id=1-omBeF4YsEzJOFT12N9fvQXp2UqfnUIR</a>)</p>
 <ul>
 <li>“8hour_” is the daily 8hour max concentration (not necessarily contemporaneous)</li>
 <li>“8hour_monthly” is the monthly mean of daily 8hour max concentrations (also not necessarily contemporaneous)</li>
-<li>“Daily_” is the daily mean concentration</li>
+<li><p>“Daily_” is the daily mean concentration</p></li>
+<li><p>“88101” is PM<sub>2.5</sub> (ug/m3) and “44201” is ozone (ppb)</p></li>
 </ul></li>
-<li><p>One major limiation is that most of the monitors are close to the 25. This will generate errors in the predictions</p></li>
-<li><p>An alternative approach may be to average these concentrations over weeks or months to get better estimates of concentrations, but that will likely depend on your analysis. It’s better to average at the monitors and re-krige. If this is something you want, let me know!</p></li>
+<li><p>There are three files for each year and pollutant:</p>
+<ul>
+<li>(pollutant name)_(year)_Kriged.csv are the IDW and ordinary kriging predictions for each census tract</li>
+<li>(pollutant name)_(year)_CV.csv are the cross-validation results</li>
+<li>(pollutant name)_(year)_Diagnostics.csv are some additional model diagnostic variables (see notes on kriging analysis below)</li>
+</ul></li>
+<li><p>One major limitation of the analysis is that most of the monitors are close to the 25. This will result in less reliable predictions farther from the highway.</p></li>
+<li><p>An alternative approach may be to average these concentrations over weeks or months to get better estimates of concentrations, but that will likely depend on your analysis. It’s better to average at the monitors and re-krige. If this is something you need/want, let me know and I’ll be happy to generate other metrics!</p></li>
 </ul>
 </div>
 <div id="notes-on-the-kriging-analysis" class="section level4">
@@ -162,7 +169,7 @@ $(document).ready(function () {
 <ul>
 <li><a href="https://pdfs.semanticscholar.org/686c/29a81eab59d7f6b7e2c4b060b1184323a122.pdf" class="uri">https://pdfs.semanticscholar.org/686c/29a81eab59d7f6b7e2c4b060b1184323a122.pdf</a></li>
 </ul></li>
-<li><p>If the monitoring data weren’t normal, the code attempts to use log-transformed estimates. We need to apply a correction to get estimates back in the original scale (See Oliver and Webster 2007, PAGE 185)</p>
+<li><p>If the monitoring data for each day/month weren’t normally distrbuted, the code attempts to use log-transformed estimates. We need to apply a correction to get estimates back in the original scale (See Oliver and Webster 2007, Page 185)</p>
 <ul>
 <li><p><a href="https://books.google.com/books?hl=en&amp;lr" class="uri">https://books.google.com/books?hl=en&amp;lr</a>=&amp;id=WBwSyvIvNY8C&amp;oi=fnd&amp;pg=PR5&amp;ots=CCLmSNqK1c&amp;sig=lFZanxv2eVSKec6nPdESzuIFrA4#v=onepage&amp;q&amp;f=false</p></li>
 <li><p>Note: A back-transformed variance estimate for OK cannot be calculated because the mean is not known (Oliver and Webster 2007, page 185)</p></li>

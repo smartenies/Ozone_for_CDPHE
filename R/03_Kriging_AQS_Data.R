@@ -158,7 +158,7 @@ for (i in 1:length(krige_files)) {
       group_by(monitor_id, Date_Local) %>% 
       summarize(mean = max(mean))
     
-    daily <- select(daily, monitor_id, Date_Local, month, Units_of_Measure) %>%
+    daily <- select(daily, monitor_id, Date_Local, Units_of_Measure) %>%
       left_join(ozone, by=c("monitor_id", "Date_Local")) %>% 
       distinct()
     
