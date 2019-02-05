@@ -85,6 +85,8 @@ for (i in 1:length(date_list)) {
   tract_exp <- bind_rows(tract_exp, temp)
 }
 
+head(tract_exp)
+
 
 
 
