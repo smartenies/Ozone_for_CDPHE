@@ -27,69 +27,91 @@ years <- c(2011:2017)
 state <- "08" #Colorado
 time_zone <- "America/Denver"
 
-#' #' https://aqs.epa.gov/aqsweb/codes/data/ParametersByDesc.csv
-#' #' Criteria pollutants and carbon parameters
-#' 
-#' pol <- c("88101", "44201") # PM2.5 and O3
+#' https://aqs.epa.gov/aqsweb/codes/data/ParametersByDesc.csv
+#' Criteria pollutants and carbon parameters
 
+pol <- c("88101", "44201") # PM2.5 and O3
+
+#' -----------------------------------------------------------------------------
 #' Points for krigings
 #' gstat requires sp objects, not sf objects
+#' -----------------------------------------------------------------------------
 
-#' First, create a boundary based on the 470 loop
-#' Coordinates based on Google Maps
-pts_df <- data.frame(lon=c(-105.194150, -105.086157, -104.785862,
-                           -104.715897, -105.007800),
-                     lat=c(39.712174, 39.553840, 39.548127,
-                           39.740367, 39.984862))
-pts <-  st_as_sf(pts_df, coords=c("lon", "lat"), crs=ll_wgs84)
-plot(st_geometry(pts), main="Boundary Points: latlong")
+#' ----------------
+#' Using census tract centroids
+#' 
+#' grid_name <- "denver_tracts"
+#' 
+#' #' First, create a boundary based on the 470 loop
+#' #' Coordinates based on Google Maps
+#' pts_df <- data.frame(lon=c(-105.194150, -105.086157, -104.785862,
+#'                            -104.715897, -105.007800),
+#'                      lat=c(39.712174, 39.553840, 39.548127,
+#'                            39.740367, 39.984862))
+#' pts <-  st_as_sf(pts_df, coords=c("lon", "lat"), crs=ll_wgs84)
+#' plot(st_geometry(pts), main="Boundary Points: latlong")
+#' 
+#' #' Project to Albers equal area (used by the Land Use dataset)
+#' #' Want to preserve area so we can calculate area-based metrics such as 
+#' #' population density
+#' pts_aea <- st_transform(pts, crs=albers)
+#' plot(st_geometry(pts_aea), main="Boundary Points: Albers Equal Area")
+#' 
+#' #' Get boundary around these points
+#' pts_bound <- st_make_grid(pts_aea, n = 1)
+#' plot(st_geometry(pts_bound), main="bounding box", border="red", col=NA)
+#' plot(st_geometry(pts_aea), col="blue", add=T)
+#' 
+#' #' Add a 5 km buffer around the bounding box
+#' bound_5km <- st_buffer(pts_bound, dist=5000)
+#' plot(st_geometry(bound_5km), main="extended bounding box")
+#' plot(st_geometry(pts_bound), col=NA, border="red", add=T)
+#' plot(st_geometry(pts_aea), col="blue", add=T)
+#' 
+#' #' Next, select census tracts that have centroids completely within this boundary
+#' co_tracts <- st_read(here::here("Data", "tl_2017_08_tract.shp")) %>% 
+#'   st_transform(albers) %>% 
+#'   mutate(GEOID = as.character(GEOID))
+#' plot(st_geometry(co_tracts))
+#' 
+#' co_centroids <- st_centroid(co_tracts) 
+#' 
+#' denver_centroids <- co_centroids[st_within(co_centroids, bound_5km) %>% lengths > 0,]
+#' 
+#' denver_tracts <- filter(co_tracts, GEOID %in% denver_centroids$GEOID)
+#' 
+#' plot(st_geometry(denver_tracts))
+#' plot(st_geometry(denver_centroids), col="blue", add=T)
+#' plot(st_geometry(bound_5km), add=T, border="red")
+#' 
+#' #' Lastly, identify the centroids of the census tracts for kriging
+#' krige_pts <- denver_centroids %>% 
+#'   mutate_if(is.character, as.numeric) %>% 
+#'   rename(id = GEOID)
+#'   
+#' 
 
-#' Project to Albers equal area (used by the Land Use dataset)
-#' Want to preserve area so we can calculate area-based metrics such as 
-#' population density
-pts_aea <- st_transform(pts, crs=albers)
-plot(st_geometry(pts_aea), main="Boundary Points: Albers Equal Area")
+#' ----------------
+#' Using Kate's grid
 
-#' Get boundary around these points
-pts_bound <- st_make_grid(pts_aea, n = 1)
-plot(st_geometry(pts_bound), main="bounding box", border="red", col=NA)
-plot(st_geometry(pts_aea), col="blue", add=T)
+grid_name <- "grid_points.csv"
 
-#' Add a 5 km buffer around the bounding box
-bound_5km <- st_buffer(pts_bound, dist=5000)
-plot(st_geometry(bound_5km), main="extended bounding box")
-plot(st_geometry(pts_bound), col=NA, border="red", add=T)
-plot(st_geometry(pts_aea), col="blue", add=T)
-
-#' Next, select census tracts that have centroids completely within this boundary
-co_tracts <- st_read(here::here("Data", "tl_2017_08_tract.shp")) %>% 
-  st_transform(albers) %>% 
-  mutate(GEOID = as.character(GEOID))
-plot(st_geometry(co_tracts))
-
-co_centroids <- st_centroid(co_tracts) 
-
-denver_centroids <- co_centroids[st_within(co_centroids, bound_5km) %>% lengths > 0,]
-
-denver_tracts <- filter(co_tracts, GEOID %in% denver_centroids$GEOID)
-
-plot(st_geometry(denver_tracts))
-plot(st_geometry(denver_centroids), col="blue", add=T)
-plot(st_geometry(bound_5km), add=T, border="red")
-
-#' Lastly, identify the centroids of the census tracts for kriging
-krige_pts <- denver_centroids %>% 
-  mutate_if(is.character, as.numeric) 
-
-#' #' just use 5% of points for testing out the script
-#' krige_pts <- sample_frac(krige_pts, 0.05)
+krige_pts <- read_csv(here::here("Data/netCDF_Data", grid_name)) %>% 
+  st_as_sf(wkt = "WKT", crs = ll_wgs84) %>% 
+  st_transform(albers)
 
 head(krige_pts)
 plot(st_geometry(krige_pts), pch = ".")
 
+#' ----------------
+#' Finalize data set
+
 #' Converting from sf to sp 
 krige_pts_sp <- as(krige_pts, "Spatial")
 plot(krige_pts_sp)
+
+grid_name2 <- gsub(".csv", "", grid_name)
+
 
 #' -----------------------------------------------------------------------------
 #' Set up objects for kriging
@@ -106,17 +128,16 @@ krige_files <- krige_files$krige_files
 for (i in 1:length(krige_files)) {
   
   #' Output file names
-  aqs_krige_name <- paste0(str_replace(krige_files[i], ".csv", ""), 
-                           "_Kriged.csv")
+  aqs_krige_name <- paste0(str_replace(krige_files[i], ".csv", ""),
+                           "_", grid_name2, "_Kriged.csv")
   
   #' Output file names
-  aqs_cv_name <- paste0(str_replace(krige_files[i], ".csv", "")
-                        , "_CV.csv")
+  aqs_cv_name <- paste0(str_replace(krige_files[i], ".csv", ""),
+                        "_", grid_name2, "_CV.csv")
   
   #' Output file names
   aqs_diagnostics_name <- paste0(str_replace(krige_files[i], ".csv", ""), 
-                                 "_Diagnostics.csv")
-  
+                                 "_", grid_name2, "_Diagnostics.csv")
   
   daily <- read_csv(here::here("Data/AQS_Data", krige_files[i]))
   colnames(daily) <- gsub(" ", "_", colnames(daily))
@@ -269,7 +290,8 @@ for (i in 1:length(krige_files)) {
     } 
     
     range_check <- "range" %in% colnames(fit_error)
-    range_val_check <- ifelse(range_check == F, F, fit_error$range[length(fit_error$range)] > 0)
+    range_val_check <- ifelse(range_check == F, F, 
+                              fit_error$range[length(fit_error$range)] > 0)
     error_check <- !inherits(fit_error, "error")
     
     if(range_check == T & range_val_check == T & error_check == T) {
@@ -301,6 +323,7 @@ for (i in 1:length(krige_files)) {
           ok_result$var1.var <- NA
         }
       }
+      
     } else {
       ok_result <- data.frame(var1.pred = rep(NA, nrow(krige_pts_sp)),
                               var1.var = rep(NA, nrow(krige_pts_sp)))
@@ -308,7 +331,7 @@ for (i in 1:length(krige_files)) {
     }
     
     #' Summary data frame
-    temp <- data.frame(GEOID = krige_pts_sp@data$GEOID,
+    temp <- data.frame(id = krige_pts_sp@data$id,
                        pollutant = str_replace(krige_files[i], ".csv", ""),
                        date = dates[j],
                        conc_pred_idw_pwr2 = idw_pwr2$var1.pred,
@@ -403,12 +426,12 @@ for (i in 1:length(krige_files)) {
   write_csv(cv_diagnostics, here::here("Results", aqs_diagnostics_name))
 }
 
-
 #' #' clean diagnostics files
-#' diag_files <- list.files(here::here("Results"), pattern = "Diagnostics")
+#' diag_files <- list.files(here::here("Results"), 
+#'                          pattern = paste0(grid_name2, "_Diagnostics"))
 #' 
 #' for (diag in 1:length(diag.files)) {
-#'   temp <- read_csv(here::here("Results", diag_files[diag])) %>% 
+#'   temp <- read_csv(here::here("Results", diag_files[diag])) %>%
 #'     distinct()
 #'   write_csv(temp,here::here("Results", diag_files[diag]))
 #' }

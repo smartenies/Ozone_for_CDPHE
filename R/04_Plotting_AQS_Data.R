@@ -83,7 +83,6 @@ ll_nad83 <- "+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"
 ll_wgs84 <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 
 
-
 #' -----------------------------------------------------------------------------
 #' Time series plots of weekly pm2.5 and ozone at each monitor
 #' -----------------------------------------------------------------------------
