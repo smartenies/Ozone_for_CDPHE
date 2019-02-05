@@ -96,6 +96,9 @@ img {
 button.code-folding-btn:focus {
   outline: none;
 }
+summary {
+  display: list-item;
+}
 </style>
 
 
@@ -103,14 +106,74 @@ button.code-folding-btn:focus {
 <div class="container-fluid main-container">
 
 <!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
 <script>
 $(document).ready(function () {
   window.buildTabsets("TOC");
 });
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
 </script>
 
 <!-- code folding -->
-
 
 
 
@@ -127,7 +190,7 @@ $(document).ready(function () {
 <div id="ozone_for_cdphe" class="section level2">
 <h2>Ozone_for_CDPHE</h2>
 <p>Kriged daily and monthly estimates of ozone exposures at census tracts in the Denver metro area for CDPHE research project</p>
-<p><strong>Date created:</strong> December 10, 2018</p>
+<p><strong>Date created:</strong> December 10, 2018 <strong>Date updated:</strong> February 5, 2019</p>
 <p><strong>Author:</strong> Sheena Martenies</p>
 <p><strong>Contact:</strong> <a href="mailto:Sheena.Martenies@colostate.edu">Sheena.Martenies@colostate.edu</a></p>
 <div id="analytical-notes" class="section level4">
@@ -140,12 +203,13 @@ $(document).ready(function () {
 <ul>
 <li><p>Monitoring data were collected from the US EPA AQS data mart (01_AQS_Data_Scrape.R)</p></li>
 <li><p>All estimates for ozone have been converted to ppb</p></li>
-<li><p>I’ve generated estimates for ozone at census tract centroids using both inverse-distance weighting and ordinary kriging (03_Kriging_AQS_Data.R)</p>
+<li><p>I’ve generated estimates for ozone at census tract centroids using both inverse-distance weighting (IDW) and ordinary kriging (OK) (03_Kriging_AQS_Data.R)</p></li>
+<li><p>The analysis uses 2-D ordinary kriging and does not account for the potential influence of time. I wanted to make sure you had some data to work with moving forward. If you’re finding that the ordinary kriging results aren’t working well, I can run a different model using spatiotemporal kriging. Let me know what might work best for your analysis.</p>
 <ul>
-<li>Sometimes it’s a challenge to fit a semivarigram to the data, and therefore kriged estimates aren’t always available.</li>
+<li>Sometimes it’s a challenge to fit a semivariogram to the data, and therefore kriged estimates aren’t always available.For these days, IDW predictions are still available</li>
 <li>You’ll have to take a look at the distribution of each daily estimate in order to see if you want to use the kriged data. IDW estimates may be better given some of the limitations (time resolution, spatial coverage of monitors)</li>
 </ul></li>
-<li><p>Due to storage issues on my U:/ drive, the output files are currently on my Google Drive: (<a href="https://drive.google.com/open?id=1-omBeF4YsEzJOFT12N9fvQXp2UqfnUIR" class="uri">https://drive.google.com/open?id=1-omBeF4YsEzJOFT12N9fvQXp2UqfnUIR</a>)</p>
+<li><p>Due to storage issues on my U:/ drive, the output files are currently on my Google Drive: (<a href="https://drive.google.com/open?id=1Exb2mP28GVNICK1k_Pk52cZSal1Tr6K-" class="uri">https://drive.google.com/open?id=1Exb2mP28GVNICK1k_Pk52cZSal1Tr6K-</a>)</p>
 <ul>
 <li>“8hour_” is the daily 8hour max concentration (not necessarily contemporaneous)</li>
 <li>“8hour_monthly” is the monthly mean of daily 8hour max concentrations (also not necessarily contemporaneous)</li>
@@ -156,7 +220,9 @@ $(document).ready(function () {
 <ul>
 <li>(pollutant name)_(year)_Kriged.csv are the IDW and ordinary kriging predictions for each census tract</li>
 <li>(pollutant name)_(year)_CV.csv are the cross-validation results</li>
-<li>(pollutant name)_(year)_Diagnostics.csv are some additional model diagnostic variables (see notes on kriging analysis below)</li>
+<li><p>(pollutant name)_(year)_Diagnostics.csv are some additional model diagnostic variables (see notes on kriging analysis below)</p></li>
+<li>Files that include the phrase “grid_points” use the same 4k grid as Kate O’Dell’s kriged PM data</li>
+<li><p>Files without this designation are kriged to census tract centroids</p></li>
 </ul></li>
 <li><p>One major limitation of the analysis is that most of the monitors are close to the 25. This will result in less reliable predictions farther from the highway.</p></li>
 <li><p>An alternative approach may be to average these concentrations over weeks or months to get better estimates of concentrations, but that will likely depend on your analysis. It’s better to average at the monitors and re-krige. If this is something you need/want, let me know and I’ll be happy to generate other metrics!</p></li>
@@ -169,7 +235,7 @@ $(document).ready(function () {
 <ul>
 <li><a href="https://pdfs.semanticscholar.org/686c/29a81eab59d7f6b7e2c4b060b1184323a122.pdf" class="uri">https://pdfs.semanticscholar.org/686c/29a81eab59d7f6b7e2c4b060b1184323a122.pdf</a></li>
 </ul></li>
-<li><p>If the monitoring data for each day/month weren’t normally distrbuted, the code attempts to use log-transformed estimates. We need to apply a correction to get estimates back in the original scale (See Oliver and Webster 2007, Page 185)</p>
+<li><p>If the monitoring data for each day/month weren’t normally distributed, the code attempts to use log-transformed estimates. We need to apply a correction to get estimates back in the original scale (See Oliver and Webster 2007, Page 185)</p>
 <ul>
 <li><p><a href="https://books.google.com/books?hl=en&amp;lr" class="uri">https://books.google.com/books?hl=en&amp;lr</a>=&amp;id=WBwSyvIvNY8C&amp;oi=fnd&amp;pg=PR5&amp;ots=CCLmSNqK1c&amp;sig=lFZanxv2eVSKec6nPdESzuIFrA4#v=onepage&amp;q&amp;f=false</p></li>
 <li><p>Note: A back-transformed variance estimate for OK cannot be calculated because the mean is not known (Oliver and Webster 2007, page 185)</p></li>

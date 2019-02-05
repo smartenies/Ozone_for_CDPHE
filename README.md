@@ -2,6 +2,7 @@
 Kriged daily and monthly estimates of ozone exposures at census tracts in the Denver metro area for CDPHE research project
 
 **Date created:** December 10, 2018
+**Date updated:** February 5, 2019
 
 **Author:** Sheena Martenies
 
@@ -46,6 +47,9 @@ the limitations (time resolution, spatial coverage of monitors)
     - (pollutant name)_(year)_Kriged.csv are the IDW and ordinary kriging predictions for each census tract
     - (pollutant name)_(year)_CV.csv are the cross-validation results
     - (pollutant name)_(year)_Diagnostics.csv are some additional model diagnostic variables (see notes on kriging analysis below)
+    
+    - Files that include the phrase "grid_points" use the same 4k grid as Kate O'Dell's kriged PM data
+    - Files without this designation are kriged to census tract centroids
   
 - One major limitation of the analysis is that most of the monitors are close to the 25. This will result in less reliable predictions farther from the highway.
 
